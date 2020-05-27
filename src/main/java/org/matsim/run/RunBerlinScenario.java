@@ -72,7 +72,7 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 
 		Config config = prepareConfig( args ) ;
@@ -181,7 +181,8 @@ public final class RunBerlinScenario {
 		final Config config = ConfigUtils.loadConfig( args[ 0 ], customModulesAll );
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
-		
+		config.controler().setLastIteration(1);
+
 		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
 		
 		config.plansCalcRoute().setRoutingRandomness( 3. );
