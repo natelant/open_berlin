@@ -1,4 +1,7 @@
 package org.matsim.analysis;
 
-public class HomeworkHandler {
+import org.matsim.core.events.handler.EventHandler;
+
+public class HomeworkHandler implements EventHandler {
+
 }
