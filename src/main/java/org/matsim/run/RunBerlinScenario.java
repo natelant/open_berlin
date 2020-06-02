@@ -42,6 +42,7 @@ import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
@@ -76,11 +77,18 @@ public final class RunBerlinScenario {
 		}
 
 		Config config = prepareConfig( args ) ;
+
+		// overwrite the output file.
+		config.controler().setOverwriteFileSetting(
+				OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
+
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
 
 	}
+
+	// now...what is happening here after this point... -nate
 
 	public static Controler prepareControler( Scenario scenario ) {
 		// note that for something like signals, and presumably drt, one needs the controler object
