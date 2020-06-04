@@ -53,6 +53,8 @@ public class HomeworkHandler implements LinkEnterEventHandler {
 
 
 
+
+
     @Override
     public void handleEvent(LinkEnterEvent event) {
 
@@ -63,5 +65,25 @@ public class HomeworkHandler implements LinkEnterEventHandler {
 
             }
         }
+    }
+
+    public void printResult() {
+
+        try {
+            writer.write("VehicleID \t LinkID \t entering vehicles");
+            writer.newLine();
+            for (int i = 0; i < 60; i++) {
+                Id<Vehicle> vehID = vehicleIds.get(i);
+                Integer linkId = ids.get(i);
+                writer.write(vehID + "\t" + linkId);
+                writer.newLine();
+            }
+
+            writer.close();
+        } catch (IOException ee) {
+            throw new RuntimeException(ee);
+
+        }
+
     }
 }
