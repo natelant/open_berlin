@@ -64,7 +64,7 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
 public final class RunBerlinScenario {
 
-	private static final Logger log = Logger.getLogger(RunBerlinScenario.class );
+	private static final Logger log = Logger.getLogger(RunBerlinScenario.class);
 
 	public static void main(String[] args) {
 		
@@ -79,14 +79,17 @@ public final class RunBerlinScenario {
 		Config config = prepareConfig( args ) ;
 
 		// overwrite the output file.
-		config.controler().setOverwriteFileSetting(
-				OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
+		// config.controler().setOverwriteFileSetting(
+		//		OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
 
 		// setting number of iterations
-		config.controler().setLastIteration(1);
+		config.controler().setLastIteration(0);
 
 		// setting input network with reduced lanes
-		// config.network().setInputFile("scenarios/equil/network-reduced-lanes.xml.gz");
+		config.network().setInputFile("../../equil/network-reduced-lanes.xml.gz");
+
+		// setting new output directory
+		config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-reduced-lanes");
 
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
@@ -274,4 +277,3 @@ public final class RunBerlinScenario {
 	}
 
 }
-

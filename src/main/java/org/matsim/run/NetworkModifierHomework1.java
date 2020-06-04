@@ -26,6 +26,7 @@ public class NetworkModifierHomework1 {
 
         // defining path to .txt file with links to be reduced
         File file = new File("./scenarios/equil/links-to-be-reduced.txt");
+        int counter = 0;
 
         // try-catch block to handle FileNotFoundException
         try {
@@ -34,7 +35,7 @@ public class NetworkModifierHomework1 {
 
                 // reading lines, parsing integers (link IDs) and creating corresponding Id<Link>
                 String line = scanner.nextLine()
-                        .replace("Link ", "")
+                        .replace("Link", "")
                         .replace(" ", "");
                 int id = Integer.parseInt(line);
                 Id<Link> linkId = Id.createLinkId(id);
@@ -45,12 +46,15 @@ public class NetworkModifierHomework1 {
                     double currNumLanes = network.getLinks().get(linkId).getNumberOfLanes();
                     if (currNumLanes > 1) {
                         network.getLinks().get(linkId).setNumberOfLanes(currNumLanes - 1);
+                        counter++;
                     }
                 }
             }
         } catch (FileNotFoundException e) {
             System.out.println("File not found!");
         }
+
+        System.out.println(counter + " links have been modified");
 
         // writing resulting network to output file
         new NetworkWriter(network).write(output);
