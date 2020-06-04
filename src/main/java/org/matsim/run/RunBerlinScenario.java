@@ -79,11 +79,11 @@ public final class RunBerlinScenario {
 		Config config = prepareConfig( args ) ;
 
 		// overwrite the output file.
-		// config.controler().setOverwriteFileSetting(
-		//		OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
+		config.controler().setOverwriteFileSetting(
+			OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
 
 		// setting number of iterations
-		config.controler().setLastIteration(0);
+		config.controler().setLastIteration(1);
 
 		// setting input network with reduced lanes
 		config.network().setInputFile("../../equil/network-reduced-lanes.xml.gz");
