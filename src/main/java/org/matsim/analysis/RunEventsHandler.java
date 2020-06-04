@@ -12,23 +12,23 @@ public class RunEventsHandler {
         // TIMUR:
         // check path, for me output is located here:
         // better make sure that yours is located here as well
-        String inputFile = "/scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5-1pct.output_events.xml.gz";
-
+        String inputBeforeChanges = "/scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5-1pct.output_events.xml.gz";
+        String inputAfterChanges = "/scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-reduced-lanes/berlin-v5.5-1pct.output_events_reduced_lanes.xml.gz";
         // does this path have to exist? or am I writing a new folder and new output file?
 
         // TIMUR:
         // you just write path to a new (yet non existing) file
 
-        String outputFile = "output100/output100.txt";
+        String outputFile = "/scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-reduced-lanes/handler-analysis.txt";
 
         // this manager is infrastructure for matsim... super fundamental
         EventsManager eventsManager = EventsUtils.createEventsManager();
 
-        HomeworkHandler eventHandler = new HomeworkHandler();
+        HomeworkHandler eventHandler = new HomeworkHandler(outputFile);
         eventsManager.addHandler(eventHandler); // add more events
 
         MatsimEventsReader eventsReader = new MatsimEventsReader(eventsManager); // reads events
-        eventsReader.readFile(inputFile);
+        eventsReader.readFile(inputBeforeChanges);
 
         // eventHandler.printResult();
     }
