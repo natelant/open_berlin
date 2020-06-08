@@ -9,7 +9,7 @@ public class RunEventsHandlerBefore {
 
     public static void main(String[] args) {
 
-        String inputBeforeChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5-1pct.output_events.xml.gz";
+        String inputBeforeChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-10-iters/berlin-v5.5-1pct.output_events.xml.gz";
         String outputFile = "./scenarios/equil/handler-analysis-before.txt";
 
         // this manager is infrastructure for matsim... super fundamental

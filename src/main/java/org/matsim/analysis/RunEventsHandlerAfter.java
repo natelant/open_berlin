@@ -8,7 +8,7 @@ public class RunEventsHandlerAfter {
 
     public static void main(String[] args) {
 
-        String inputAfterChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-reduced-lanes/berlin-v5.5-1pct.output_events_reduced_lanes.xml.gz";
+        String inputAfterChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-10-iters-reduced-lanes/berlin-v5.5-1pct.output_events.xml.gz";
         String outputFile = "./scenarios/equil/handler-analysis-after.txt";
 
         // this manager is infrastructure for matsim... super fundamental

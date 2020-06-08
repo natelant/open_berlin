@@ -83,13 +83,14 @@ public final class RunBerlinScenario {
 			OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
 
 		// setting number of iterations
-		config.controler().setLastIteration(1);
+		config.controler().setLastIteration(9);
 
 		// setting input network with reduced lanes
 		config.network().setInputFile("../../equil/network-reduced-lanes.xml.gz");
 
 		// setting new output directory
-		config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-reduced-lanes");
+		// config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct");
+		config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-10-iters-reduced-lanes");
 
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
