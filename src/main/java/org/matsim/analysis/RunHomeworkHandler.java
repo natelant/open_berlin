@@ -14,11 +14,11 @@ public class RunHomeworkHandler {
     public static void main(String[] args) {
 
         // defining input and output paths
-        String inputBeforeChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-10-iters/berlin-v5.5-1pct.output_events.xml.gz";
-        String outputBeforeChanges = "./scenarios/equil/handler-analysis-before.txt";
+        String inputBeforeChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5-1pct.output_events.xml.gz";
+        String outputBeforeChanges = "./scenarios/equil/handler-analysis-before_50.txt";
         String inputAfterChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-10-iters-reduced-lanes/berlin-v5.5-1pct.output_events.xml.gz";
-        String outputAfterChanges = "./scenarios/equil/handler-analysis-after.txt";
-        String outputAllAffectedAgents = "./scenarios/equil/handler-all-affected-agents.txt";
+        String outputAfterChanges = "./scenarios/equil/handler-analysis-after_50.txt";
+        String outputAllAffectedAgents = "./scenarios/equil/handler-all-affected-agents_50.txt";
 
         // run handler for both "before" and "after" cases
         runHomeworkHandler(inputBeforeChanges, outputBeforeChanges);
