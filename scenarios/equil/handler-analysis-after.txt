@@ -1,6 +1,4 @@
 Vehicles using Bundesallee (total of 364)
-
-Vehicle IDs:
 389015901
 315852001
 361258101

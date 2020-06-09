@@ -55,8 +55,7 @@ public class HomeworkHandler implements LinkEnterEventHandler {
     // print unique vehicles that use at least one link of Bundesallee
     public void printToFile() {
         try {
-            writer.write("Vehicles using Bundesallee (total of " + vehicleIds.size() + ")\n\n");
-            writer.write("Vehicle IDs:\n");
+            writer.write("Vehicles using Bundesallee (total of " + vehicleIds.size() + ")\n");
             for (Id<Vehicle> vehId : vehicleIds) {
                 writer.write(vehId.toString() + "\n");
             }
