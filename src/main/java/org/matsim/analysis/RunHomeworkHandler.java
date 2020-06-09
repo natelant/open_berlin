@@ -40,14 +40,22 @@ public class RunHomeworkHandler {
 
     public static void createAllAffectedAgentsFile(String outputBefore, String outputAfter, String outputFinal) {
 
-        Set<String> affectedAgents = new LinkedHashSet<>();
+        Set<String> agentsBefore = new LinkedHashSet<>();
+        Set<String> agentsAfter = new LinkedHashSet<>();
 
-        readIDs(outputBefore, affectedAgents);
-        readIDs(outputAfter, affectedAgents);
+        // creating sets of agents for "before" and "after" cases
+        readIDs(outputBefore, agentsBefore);
+        readIDs(outputAfter, agentsAfter);
+
+        // counting those who used Bundesallee before, after or before&after
+        countAgentsBeforeAfter(agentsBefore, agentsAfter);
+
+        // unite sets -> we now have one set for all affected agents
+        agentsBefore.addAll(agentsAfter);
 
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFinal));
-            for (String agent : affectedAgents) {
+            for (String agent : agentsBefore) {
                 writer.write(agent + "\n");
             }
             writer.close();
@@ -67,5 +75,21 @@ public class RunHomeworkHandler {
         } catch (FileNotFoundException ee) {
             System.out.println("File not found!");
         }
+    }
+
+    public static void countAgentsBeforeAfter(Set<String> agentsBefore, Set<String> agentsAfter) {
+        int onlyBefore = 0;
+        int beforeAndAfter = 0;
+
+        for (String agent : agentsBefore) {
+            if (agentsAfter.contains(agent)) {
+                beforeAndAfter++;
+            } else {
+                onlyBefore++;
+            }
+        }
+        System.out.println(onlyBefore + " agents used Bundesallee only before the changes");
+        System.out.println(agentsAfter.size()-beforeAndAfter + " agents used Bundesallee only after the changes");
+        System.out.println(beforeAndAfter + " agents used Bundesallee both before and after the changes");
     }
 }
