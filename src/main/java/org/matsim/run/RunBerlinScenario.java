@@ -94,12 +94,13 @@ public final class RunBerlinScenario {
 
 		Scenario scenario = prepareScenario( config ) ;
 
+		// removing agents' initial routes
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			for (Plan plan : person.getPlans()) {
 				for (PlanElement pe : plan.getPlanElements()) {
 					if (pe instanceof Leg) {
 						((Leg) pe).setRoute(null);
-					} else {
+					} else if ( !(pe instanceof Activity) ) {
 						throw new RuntimeException("Plan element can either be activity or leg.");
 					}
 				}
