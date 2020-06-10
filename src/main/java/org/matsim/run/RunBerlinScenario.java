@@ -31,7 +31,7 @@ import org.matsim.analysis.RunPersonTripAnalysis;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.*;
 import org.matsim.contrib.drt.routing.DrtRoute;
 import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.core.config.Config;
@@ -89,10 +89,23 @@ public final class RunBerlinScenario {
 		config.network().setInputFile("../../equil/network-reduced-lanes.xml.gz");
 
 		// setting new output directory
-		// config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct");
-		config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-10-iters-reduced-lanes");
+		// config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters");
+		config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters-reduced-lanes");
 
 		Scenario scenario = prepareScenario( config ) ;
+
+		for (Person person : scenario.getPopulation().getPersons().values()) {
+			for (Plan plan : person.getPlans()) {
+				for (PlanElement pe : plan.getPlanElements()) {
+					if (pe instanceof Leg) {
+						((Leg) pe).setRoute(null);
+					} else {
+						throw new RuntimeException("Plan element can either be activity or leg.");
+					}
+				}
+			}
+		}
+
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
 

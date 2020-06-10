@@ -14,9 +14,9 @@ public class RunHomeworkHandler {
     public static void main(String[] args) {
 
         // defining input and output paths
-        String inputBeforeChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5-1pct.output_events.xml.gz";
+        String inputBeforeChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters/berlin-v5.5-1pct.output_events.xml.gz";
         String outputBeforeChanges = "./scenarios/equil/handler-analysis-before_50.txt";
-        String inputAfterChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-10-iters-reduced-lanes/berlin-v5.5-1pct.output_events.xml.gz";
+        String inputAfterChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters-reduced-lanes/berlin-v5.5-1pct.output_events.xml.gz";
         String outputAfterChanges = "./scenarios/equil/handler-analysis-after_50.txt";
         String outputAllAffectedAgents = "./scenarios/equil/handler-all-affected-agents_50.txt";
 
@@ -47,7 +47,7 @@ public class RunHomeworkHandler {
         readIDs(outputBefore, agentsBefore);
         readIDs(outputAfter, agentsAfter);
 
-        // counting those who used Bundesallee before, after or before&after
+        // counting those who used Bundesallee before, after or before&after, printing to the console
         countAgentsBeforeAfter(agentsBefore, agentsAfter);
 
         // unite sets -> we now have one set for all affected agents
