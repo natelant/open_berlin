@@ -19,22 +19,30 @@ import java.util.Scanner;
 
 public class RunDistanceTimeModeHandler {
 
-    static final String networkBeforeChanges = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
-    static final String networkAfterChanges = "./scenarios/equil/network-reduced-lanes.xml.gz";
-    static final String eventsBeforeChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters/berlin-v5.5-1pct.output_events.xml.gz";
-    static final String eventsAfterChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters-reduced-lanes/berlin-v5.5-1pct.output_events.xml.gz";
+    static String networkBeforeChanges = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
+    static String networkAfterChanges = "./scenarios/equil/network-reduced-lanes.xml.gz";
+    static String eventsBeforeChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters/berlin-v5.5-1pct.output_events.xml.gz";
+    static String eventsAfterChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters-reduced-lanes/berlin-v5.5-1pct.output_events.xml.gz";
+
+    static String agentsOnlyBefore = "./scenarios/equil/handler-only-before_50.txt";
+    // static String agentsBeforeAndAfter = "./scenarios/equil/handler-before-and-after_50.txt";
+
     static HashMap<Id<Person>, ArrayList<String>> modesBefore;
     static HashMap<Id<Person>, ArrayList<String>> modesAfter;
 
     public static void main(String[] args) {
 
-        runDistanceAnalyzer(networkBeforeChanges, eventsBeforeChanges);
-        runDistanceAnalyzer(networkAfterChanges, eventsAfterChanges);
-        checkModeChange();
+        // getting average distance and time travelling before and after for all affected agents
+        runDistanceTimeAnalyzer(networkBeforeChanges, eventsBeforeChanges);
+        runDistanceTimeAnalyzer(networkAfterChanges, eventsAfterChanges);
+
+        // check if there was mode change for those who used Bundesallee only before the changes
+        checkModeChange(agentsOnlyBefore);
 
     }
 
-    public static void runDistanceAnalyzer(String network, String events) {
+    // normal matsim runHandler thing
+    public static void runDistanceTimeAnalyzer(String network, String events) {
 
         EventsManager eventsManager = EventsUtils.createEventsManager();
         Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
@@ -54,28 +62,32 @@ public class RunDistanceTimeModeHandler {
         }
     }
 
-    public static void checkModeChange() {
+    public static void checkModeChange(String agentsGroup) {
 
-        ArrayList<String> thoseWhoStopped = new ArrayList<>();
-
+        // reading specified agents' IDs and saving to arraylist
+        ArrayList<String> agents = new ArrayList<>();
         try {
-            Scanner scanner = new Scanner(new File("./scenarios/equil/handler-agents-who-stopped-using_50.txt"));
+            Scanner scanner = new Scanner(new File(agentsGroup));
             while (scanner.hasNext()) {
-                thoseWhoStopped.add(scanner.nextLine());
+                agents.add(scanner.nextLine());
             }
         } catch (FileNotFoundException ee) {
             System.out.println("File not found!");
         }
 
+        // setting counters to 0
         int counter = 0;
         int lessCarCounter = 0;
         int morePtCounter = 0;
         int moreBicycleCounter = 0;
         int moreWalkCounter = 0;
-        for (String strPersonId : thoseWhoStopped) {
+
+        // iterating over agents: if modes "after" are not the same as "before", do dome analysis
+        for (String strPersonId : agents) {
             Id<Person> personId = Id.createPersonId(strPersonId);
             if (!modesBefore.get(personId).equals(modesAfter.get(personId))) {
 
+                // see this function further down
                 if (moreOrLessMode(personId, "car").equals("less")) lessCarCounter++;
                 if (moreOrLessMode(personId, "pt").equals("more")) morePtCounter++;
                 if (moreOrLessMode(personId, "bicycle").equals("more")) moreBicycleCounter++;
@@ -84,8 +96,10 @@ public class RunDistanceTimeModeHandler {
                 counter++;
             }
         }
-        System.out.println("total agents " + thoseWhoStopped.size());
-        System.out.println("new routes: " + (thoseWhoStopped.size()-counter) + " agents");
+
+        // printing results to the console
+        System.out.println("total agents " + agents.size());
+        System.out.println("new routes: " + (agents.size()-counter) + " agents");
         System.out.println("new modes: " + counter + " agents. especially:");
 
         System.out.println("less car " + lessCarCounter);
@@ -94,6 +108,7 @@ public class RunDistanceTimeModeHandler {
         System.out.println("more walk " + moreWalkCounter);
     }
 
+    // checking if person makes more, less or equal number of legs with this mode ("before" vs. "after")
     static String moreOrLessMode(Id<Person> personId, String mode) {
         if (Collections.frequency(modesBefore.get(personId), mode)
                 > Collections.frequency(modesAfter.get(personId), mode)) {

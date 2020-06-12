@@ -44,6 +44,7 @@ public class HomeworkHandler implements LinkEnterEventHandler {
         }
     }
 
+    // collecting vehicle ids entering at least 1 link of Bundesallee
     @Override
     public void handleEvent(LinkEnterEvent event) {
         for (int id : linkIds) {

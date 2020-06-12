@@ -26,10 +26,11 @@ public class DistanceTimeModeHandler implements LinkEnterEventHandler, PersonDep
     ConcurrentHashMap<Id<Person>, Double> timeTravelled = new ConcurrentHashMap<>();
     HashMap<Id<Person>, ArrayList<String>> modes = new HashMap<>();
 
+    // normal constructor reading network
     public DistanceTimeModeHandler(Network network) {
         this.network = network;
 
-        // reading all-affected-agents' IDs
+        // reading all-affected-agents' IDs, filling maps with null-values
         try {
             Scanner scanner = new Scanner(new File("./scenarios/equil/handler-all-affected-agents_50.txt"));
             while (scanner.hasNext()) {
@@ -92,7 +93,6 @@ public class DistanceTimeModeHandler implements LinkEnterEventHandler, PersonDep
     }
 
     private String clockTime(double seconds) {
-        LocalTime timeOfDay = LocalTime.ofSecondOfDay((long)seconds);
-        return timeOfDay.toString();
+        return LocalTime.ofSecondOfDay((long)seconds).toString();
     }
 }
