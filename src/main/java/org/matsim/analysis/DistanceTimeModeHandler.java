@@ -78,7 +78,7 @@ public class DistanceTimeModeHandler implements LinkEnterEventHandler, PersonDep
             }
         }
         double averageDistance = distanceTravelled.values().stream().mapToDouble(i -> i).sum() / distanceTravelled.size();
-        System.out.println(averageDistance);
+        System.out.println("Average distance: " + averageDistance);
     }
 
     public void printAverageTravelTime() {
@@ -89,7 +89,7 @@ public class DistanceTimeModeHandler implements LinkEnterEventHandler, PersonDep
             }
         }
         double averageTime = timeTravelled.values().stream().mapToDouble(i -> i).sum() / timeTravelled.size();
-        System.out.println(clockTime(averageTime));
+        System.out.println("Average travel time: " + clockTime(averageTime));
     }
 
     private String clockTime(double seconds) {

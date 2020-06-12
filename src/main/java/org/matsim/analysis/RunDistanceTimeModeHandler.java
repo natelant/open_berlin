@@ -19,11 +19,13 @@ import java.util.Scanner;
 
 public class RunDistanceTimeModeHandler {
 
+    // input network and events files
     static String networkBeforeChanges = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
     static String networkAfterChanges = "./scenarios/equil/network-reduced-lanes.xml.gz";
     static String eventsBeforeChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters/berlin-v5.5-1pct.output_events.xml.gz";
     static String eventsAfterChanges = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters-reduced-lanes/berlin-v5.5-1pct.output_events.xml.gz";
 
+    // static String allAffectedAgents = "./scenarios/equil/handler-all-affected-agents_50.txt";
     static String agentsOnlyBefore = "./scenarios/equil/handler-only-before_50.txt";
     // static String agentsBeforeAndAfter = "./scenarios/equil/handler-before-and-after_50.txt";
 
@@ -38,7 +40,6 @@ public class RunDistanceTimeModeHandler {
 
         // check if there was mode change for those who used Bundesallee only before the changes
         checkModeChange(agentsOnlyBefore);
-
     }
 
     // normal matsim runHandler thing
@@ -92,8 +93,8 @@ public class RunDistanceTimeModeHandler {
                 if (moreOrLessMode(personId, "pt").equals("more")) morePtCounter++;
                 if (moreOrLessMode(personId, "bicycle").equals("more")) moreBicycleCounter++;
                 if (moreOrLessMode(personId, "walk").equals("more")) moreWalkCounter++;
-
                 counter++;
+
             }
         }
 
