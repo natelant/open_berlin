@@ -3,6 +3,8 @@ package org.matsim.analysis;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,13 +19,14 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.vehicles.Vehicle;
 
-public class DistanceAndTimeAnalyzer implements LinkEnterEventHandler, PersonDepartureEventHandler, PersonArrivalEventHandler {
+public class DistanceTimeModeHandler implements LinkEnterEventHandler, PersonDepartureEventHandler, PersonArrivalEventHandler {
 
     Network network;
     ConcurrentHashMap<Id<Vehicle>, Double> distanceTravelled = new ConcurrentHashMap<>();
     ConcurrentHashMap<Id<Person>, Double> timeTravelled = new ConcurrentHashMap<>();
+    HashMap<Id<Person>, ArrayList<String>> modes = new HashMap<>();
 
-    public DistanceAndTimeAnalyzer(Network network) {
+    public DistanceTimeModeHandler(Network network) {
         this.network = network;
 
         // reading all-affected-agents' IDs
@@ -33,6 +36,7 @@ public class DistanceAndTimeAnalyzer implements LinkEnterEventHandler, PersonDep
                 String line = scanner.nextLine();
                 distanceTravelled.put(Id.createVehicleId(line), 0.0);
                 timeTravelled.put(Id.createPersonId(line), 0.0);
+                modes.put(Id.createPersonId(line), new ArrayList<>());
             }
         } catch (FileNotFoundException ee) {
             System.out.println("File not found!");
@@ -61,6 +65,7 @@ public class DistanceAndTimeAnalyzer implements LinkEnterEventHandler, PersonDep
         Id<Person> personId = event.getPersonId();
         if (timeTravelled.containsKey(event.getPersonId())) {
             timeTravelled.put(personId, timeTravelled.get(personId) - event.getTime());
+            modes.get(personId).add(event.getLegMode());
         }
     }
 
@@ -77,6 +82,7 @@ public class DistanceAndTimeAnalyzer implements LinkEnterEventHandler, PersonDep
 
     public void printAverageTravelTime() {
         for (Id<Person> personId : timeTravelled.keySet()) {
+            // removing all "freight" vehicles
             if (timeTravelled.get(personId) == 0.0) {
                 timeTravelled.remove(personId);
             }
