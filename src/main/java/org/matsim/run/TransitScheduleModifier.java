@@ -10,7 +10,9 @@ import org.matsim.api.core.v01.network.NetworkFactory;
 import org.matsim.api.core.v01.network.Node;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.pt.transitSchedule.TransitScheduleUtils;
 import org.matsim.pt.transitSchedule.api.*;
 import org.matsim.pt.utils.TransitScheduleValidator;
 
@@ -50,45 +52,47 @@ public class TransitScheduleModifier {
         List<Double> travelTimesWestToEast = List.of(100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0);
 
         // some of these lists are not necessary, remove them later
-        ArrayList<Id<Node>> nodeIdsToEast = new ArrayList<>(9);
-        ArrayList<Id<Node>> nodeIdsToWest = new ArrayList<>(9);
-        ArrayList<Node> nodesToEast = new ArrayList<>(9);
-        ArrayList<Node> nodesToWest = new ArrayList<>(9);
-        ArrayList<Link> linksToEast = new ArrayList<>(9);
-        ArrayList<Link> linksToWest = new ArrayList<>(9);
-        ArrayList<Id<TransitStopFacility>> transitStopsToEast = new ArrayList<>(9);
-        ArrayList<Id<TransitStopFacility>> transitStopsToWest = new ArrayList<>(9);
+        ArrayList<Id<Node>> nodeIdsToEast = new ArrayList<>();
+        ArrayList<Id<Node>> nodeIdsToWest = new ArrayList<>();
+        ArrayList<Node> nodesToEast = new ArrayList<>();
+        ArrayList<Node> nodesToWest = new ArrayList<>();
+        ArrayList<Link> linksToEast = new ArrayList<>();
+        ArrayList<Link> linksToWest = new ArrayList<>();
+        ArrayList<Id<TransitStopFacility>> transitStopsToEast = new ArrayList<>();
+        ArrayList<Id<TransitStopFacility>> transitStopsToWest = new ArrayList<>();
 
         for (String stop: stops.keySet()) {
 
             Coord coord = new Coord(stops.get(stop)[0], stops.get(stop)[1]);
 
             // creating pt_Nodes (in both directions, toEast/toWest), adding to Network
-            Id<Node> nodeIdToEast = Id.createNodeId(String.format("pt_%s", stop));
+            Id<Node> nodeIdToEast = Id.createNodeId(String.format("pt_%s_toEast", stop));
             nodeIdsToEast.add(nodeIdToEast);
             Node nodeToEast = nf.createNode(nodeIdToEast, coord);
             network.addNode(nodeToEast);
             nodesToEast.add(nodeToEast);
 
-            Id<Node> nodeIdToWest = Id.createNodeId(String.format("pt_%s", stop));
+            Id<Node> nodeIdToWest = Id.createNodeId(String.format("pt_%s_toWest", stop));
             nodeIdsToWest.add(nodeIdToWest);
             Node nodeToWest = nf.createNode(nodeIdToWest, coord);
             network.addNode(nodeToWest);
             nodesToWest.add(nodeToWest);
 
             // creating TransitStops (in both directions, toEast/toWest), adding to TransitSchedule
-            Id<TransitStopFacility> idToEast = Id.create(stop, TransitStopFacility.class);
+            Id<TransitStopFacility> idToEast = Id.create(stop + "_toEast", TransitStopFacility.class);
             transitStopsToEast.add(idToEast);
             TransitStopFacility transitStopFacilityToEast = tsf.createTransitStopFacility(idToEast, coord, false);
             transitStopFacilityToEast.setName(String.format("Berlin, %s", stop));
             transitSchedule.addStopFacility(transitStopFacilityToEast);
 
-            Id<TransitStopFacility> idToWest = Id.create(stop, TransitStopFacility.class);
+            Id<TransitStopFacility> idToWest = Id.create(stop + "_toWest", TransitStopFacility.class);
             transitStopsToWest.add(idToWest);
             TransitStopFacility transitStopFacilityToWest = tsf.createTransitStopFacility(idToWest, coord, false);
             transitStopFacilityToWest.setName(String.format("Berlin, %s", stop));
             transitSchedule.addStopFacility(transitStopFacilityToWest);
         }
+
+        Collections.reverse(nodesToWest);
 
         // create and add pt_Links
         {
@@ -106,7 +110,7 @@ public class TransitScheduleModifier {
 
             for (Node toNode : nodesToWest) {
                 if (counter != 8) {
-                    Node fromNode = nodesToWest.get(nodesToEast.indexOf(toNode) - 1);
+                    Node fromNode = nodesToWest.get(nodesToWest.indexOf(toNode) - 1);
                     Id<Link> linkId = Id.createLinkId(String.format("pt_%d_toWest", counter));
                     Link link = nf.createLink(linkId, fromNode, toNode);
                     network.addLink(link);
@@ -218,7 +222,7 @@ public class TransitScheduleModifier {
 
         // use TransitScheduleValidator
 
-        TransitScheduleValidator.ValidationResult result = TransitScheduleValidator.validateAll(transitSchedule, scenario.getNetwork());
+        /*TransitScheduleValidator.ValidationResult result = TransitScheduleValidator.validateAll(transitSchedule, scenario.getNetwork());
         for (String error : result.getWarnings()) {
             LOGGER.warn(error);
         }
@@ -227,7 +231,7 @@ public class TransitScheduleModifier {
         }
         for (TransitScheduleValidator.ValidationResult.ValidationIssue issue : result.getIssues()) {
             LOGGER.warn(issue.getMessage());
-        }
+        }*/
 
         // save to file
         TransitScheduleWriter tsw = new TransitScheduleWriter(transitSchedule);
