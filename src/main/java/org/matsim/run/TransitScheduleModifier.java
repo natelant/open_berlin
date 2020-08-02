@@ -4,10 +4,7 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.network.NetworkFactory;
-import org.matsim.api.core.v01.network.Node;
+import org.matsim.api.core.v01.network.*;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
@@ -22,7 +19,8 @@ import java.util.*;
 public class TransitScheduleModifier {
 
     static String input = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";
-    static String output = "./scenarios/equil/transit-schedule-modified.xml.gz";
+    static String outputNetwork = "./scenarios/equil/network-modified-HW2.xml.gz";
+    static String outputTransitSchedule = "./scenarios/equil/transit-schedule-modified.xml.gz";
 
     // to do: change to RunMatsim.class
     private static final Logger LOGGER = Logger.getLogger(TransitScheduleModifier.class);
@@ -38,15 +36,14 @@ public class TransitScheduleModifier {
         TransitSchedule transitSchedule = scenario.getTransitSchedule();
         TransitScheduleFactory tsf = transitSchedule.getFactory();
 
-        HashMap<String, Double[]> stops = new HashMap<>(Map.of(
-                "Berliner Rathaus", new Double[]{4595741.283812712, 5821391.332894235},
-                "Fischerinsel", new Double[]{4595584.307828543, 5820979.312737804},
-                "U Spittelmarkt", new Double[]{4595311.298656522, 5820721.322711342},
-                "Jerusalemer Str.", new Double[]{4594868.306563006, 5820661.307287242},
-                "U Stadtmitte/Leipziger Str.", new Double[]{4594469.274947998, 5820596.279395453},
-                "Leipziger Str./Wilhelmstr.", new Double[]{4594082.239244875, 5820553.33117294},
-                "S+U Potsdamer Platz", new Double[]{4593681.244368908, 5820501.353559958},
-                "Kulturforum", new Double[]{4593018.0, 5820324.0}));
+        String[] stopNames = {
+                "Berliner Rathaus", "Fischerinsel", "U Spittelmarkt", "Jerusalemer Str.",
+                "U Stadtmitte/Leipziger Str.", "Leipziger Str./Wilhelmstr.", "S+U Potsdamer Platz", "Kulturforum"};
+        double[][] stopCoords = {
+                {4595741.283812712, 5821391.332894235}, {4595543.276787662, 5821032.276349911},
+                {4595311.298656522, 5820721.322711342}, {4594868.306563006, 5820661.307287242},
+                {4594469.274947998, 5820596.279395453}, {4594082.239244875, 5820553.33117294},
+                {4593681.244368908, 5820501.353559958}, {4593018.0, 5820324.0}};
 
         // check and update travel times!
         List<Double> travelTimesWestToEast = List.of(100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0);
@@ -61,9 +58,11 @@ public class TransitScheduleModifier {
         ArrayList<Id<TransitStopFacility>> transitStopsToEast = new ArrayList<>();
         ArrayList<Id<TransitStopFacility>> transitStopsToWest = new ArrayList<>();
 
-        for (String stop: stops.keySet()) {
+        for (int i=0; i<stopNames.length; i++) {
 
-            Coord coord = new Coord(stops.get(stop)[0], stops.get(stop)[1]);
+            String stop = stopNames[i];
+            double[] coords = stopCoords[i];
+            Coord coord = new Coord(coords[0], coords[1]);
 
             // creating pt_Nodes (in both directions, toEast/toWest), adding to Network
             Id<Node> nodeIdToEast = Id.createNodeId(String.format("pt_%s_toEast", stop));
@@ -92,7 +91,7 @@ public class TransitScheduleModifier {
             transitSchedule.addStopFacility(transitStopFacilityToWest);
         }
 
-        Collections.reverse(nodesToWest);
+        Collections.reverse(nodesToEast);
 
         // create and add pt_Links
         {
@@ -108,15 +107,16 @@ public class TransitScheduleModifier {
                 counter++;
             }
 
+            int counter2 = 0;
             for (Node toNode : nodesToWest) {
-                if (counter != 8) {
+                if (counter2 != 0) {
                     Node fromNode = nodesToWest.get(nodesToWest.indexOf(toNode) - 1);
-                    Id<Link> linkId = Id.createLinkId(String.format("pt_%d_toWest", counter));
+                    Id<Link> linkId = Id.createLinkId(String.format("pt_%d_toWest", 8-counter2));
                     Link link = nf.createLink(linkId, fromNode, toNode);
                     network.addLink(link);
                     linksToWest.add(link);
                 }
-                counter--;
+                counter2++;
             }
         }
 
@@ -126,7 +126,7 @@ public class TransitScheduleModifier {
             Node alex16 = network.getNodes().get(Id.createNodeId("pt_070301008816"));
             Node alex17 = network.getNodes().get(Id.createNodeId("pt_070301008817"));
             Node rathausToEast = nodesToEast.get(7);
-            Node rathausToWest = nodesToWest.get(7);
+            Node rathausToWest = nodesToWest.get(0);
 
             Id<Link> linkIdToAlex16 = Id.createLinkId(String.format("pt_%d_toEast_to16", 8));
             Link rathausToAlex16 = nf.createLink(linkIdToAlex16, rathausToEast, alex16);
@@ -233,8 +233,11 @@ public class TransitScheduleModifier {
             LOGGER.warn(issue.getMessage());
         }*/
 
-        // save to file
+        // save to files
+        NetworkWriter nw = new NetworkWriter(network);
+        nw.write(outputNetwork);
+
         TransitScheduleWriter tsw = new TransitScheduleWriter(transitSchedule);
-        tsw.writeFile(output);
+        tsw.writeFile(outputTransitSchedule);
     }
 }
