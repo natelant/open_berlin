@@ -7,11 +7,9 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.*;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.pt.transitSchedule.TransitScheduleUtils;
 import org.matsim.pt.transitSchedule.api.*;
-import org.matsim.pt.utils.TransitScheduleValidator;
 
 import java.util.*;
 
@@ -55,8 +53,10 @@ public class TransitScheduleModifier {
         ArrayList<Node> nodesToWest = new ArrayList<>();
         ArrayList<Link> linksToEast = new ArrayList<>();
         ArrayList<Link> linksToWest = new ArrayList<>();
-        ArrayList<Id<TransitStopFacility>> transitStopsToEast = new ArrayList<>();
-        ArrayList<Id<TransitStopFacility>> transitStopsToWest = new ArrayList<>();
+        ArrayList<Id<Link>> linkIdsToEast = new ArrayList<>();
+        ArrayList<Id<Link>> linkIdsToWest = new ArrayList<>();
+        ArrayList<TransitStopFacility> transitStopsToEast = new ArrayList<>();
+        ArrayList<TransitStopFacility> transitStopsToWest = new ArrayList<>();
 
         for (int i=0; i<stopNames.length; i++) {
 
@@ -79,15 +79,15 @@ public class TransitScheduleModifier {
 
             // creating TransitStops (in both directions, toEast/toWest), adding to TransitSchedule
             Id<TransitStopFacility> idToEast = Id.create(stop + "_toEast", TransitStopFacility.class);
-            transitStopsToEast.add(idToEast);
             TransitStopFacility transitStopFacilityToEast = tsf.createTransitStopFacility(idToEast, coord, false);
             transitStopFacilityToEast.setName(String.format("Berlin, %s", stop));
+            transitStopsToEast.add(transitStopFacilityToEast);
             transitSchedule.addStopFacility(transitStopFacilityToEast);
 
             Id<TransitStopFacility> idToWest = Id.create(stop + "_toWest", TransitStopFacility.class);
-            transitStopsToWest.add(idToWest);
             TransitStopFacility transitStopFacilityToWest = tsf.createTransitStopFacility(idToWest, coord, false);
             transitStopFacilityToWest.setName(String.format("Berlin, %s", stop));
+            transitStopsToWest.add(transitStopFacilityToWest);
             transitSchedule.addStopFacility(transitStopFacilityToWest);
         }
 
@@ -102,6 +102,8 @@ public class TransitScheduleModifier {
                     Id<Link> linkId = Id.createLinkId(String.format("pt_%d_toEast", counter));
                     Link link = nf.createLink(linkId, fromNode, toNode);
                     network.addLink(link);
+                    // TODO: remove one of them
+                    linkIdsToEast.add(linkId);
                     linksToEast.add(link);
                 }
                 counter++;
@@ -114,6 +116,8 @@ public class TransitScheduleModifier {
                     Id<Link> linkId = Id.createLinkId(String.format("pt_%d_toWest", 8-counter2));
                     Link link = nf.createLink(linkId, fromNode, toNode);
                     network.addLink(link);
+                    // TODO: remove one of them
+                    linkIdsToWest.add(linkId);
                     linksToWest.add(link);
                 }
                 counter2++;
@@ -122,32 +126,34 @@ public class TransitScheduleModifier {
 
         // manually adding pt_Links between Alex and Berliner Rathaus, because there are
         // two different pt_Nodes of Alexanderplatz/Dircksenstr.
-        {
-            Node alex16 = network.getNodes().get(Id.createNodeId("pt_070301008816"));
-            Node alex17 = network.getNodes().get(Id.createNodeId("pt_070301008817"));
-            Node rathausToEast = nodesToEast.get(7);
-            Node rathausToWest = nodesToWest.get(0);
+        Node alex16 = network.getNodes().get(Id.createNodeId("pt_070301008816"));
+        Node alex17 = network.getNodes().get(Id.createNodeId("pt_070301008817"));
+        Node rathausToEast = nodesToEast.get(7);
+        Node rathausToWest = nodesToWest.get(0);
 
-            Id<Link> linkIdToAlex16 = Id.createLinkId(String.format("pt_%d_toEast_to16", 8));
-            Link rathausToAlex16 = nf.createLink(linkIdToAlex16, rathausToEast, alex16);
-            network.addLink(rathausToAlex16);
-            linksToEast.add(rathausToAlex16);
+        Id<Link> linkIdToAlex16 = Id.createLinkId("pt_8_toEast_to16");
+        Link rathausToAlex16 = nf.createLink(linkIdToAlex16, rathausToEast, alex16);
+        network.addLink(rathausToAlex16);
+        //linkIdsToEast.add(linkIdToAlex16);
+        linksToEast.add(rathausToAlex16);
 
-            Id<Link> linkIdToAlex17 = Id.createLinkId(String.format("pt_%d_toEast_to17", 8));
-            Link rathausToAlex17 = nf.createLink(linkIdToAlex17, rathausToEast, alex17);
-            network.addLink(rathausToAlex17);
-            linksToEast.add(rathausToAlex17);
+        Id<Link> linkIdToAlex17 = Id.createLinkId("pt_8_toEast_to17");
+        Link rathausToAlex17 = nf.createLink(linkIdToAlex17, rathausToEast, alex17);
+        network.addLink(rathausToAlex17);
+        //linkIdsToEast.add(linkIdToAlex17);
+        linksToEast.add(rathausToAlex17);
 
-            Id<Link> linkIdFromAlex16 = Id.createLinkId(String.format("pt_%d_toWest_from16", 8));
-            Link fromAlex16 = nf.createLink(linkIdFromAlex16, alex17, rathausToWest);
-            network.addLink(fromAlex16);
-            linksToWest.add(fromAlex16);
+        Id<Link> linkIdFromAlex16 = Id.createLinkId("pt_8_toWest_from16");
+        Link fromAlex16 = nf.createLink(linkIdFromAlex16, alex17, rathausToWest);
+        network.addLink(fromAlex16);
+        //linkIdsToWest.add(linkIdFromAlex16);
+        linksToWest.add(fromAlex16);
 
-            Id<Link> linkIdFromAlex17 = Id.createLinkId(String.format("pt_%d_toWest_from17", 8));
-            Link fromAlex17 = nf.createLink(linkIdFromAlex17, alex17, rathausToWest);
-            network.addLink(fromAlex17);
-            linksToWest.add(fromAlex17);
-        }
+        Id<Link> linkIdFromAlex17 = Id.createLinkId("pt_8_toWest_from17");
+        Link fromAlex17 = nf.createLink(linkIdFromAlex17, alex17, rathausToWest);
+        network.addLink(fromAlex17);
+        //linkIdsToWest.add(linkIdFromAlex17);
+        linksToWest.add(fromAlex17);
 
         // TODO: link attributes (length, capacity, freespeed)
         double[][] linksAttributes = {
@@ -155,6 +161,7 @@ public class TransitScheduleModifier {
                 {1.0, 2.0, 3.0}, {1.0, 2.0, 3.0}, {1.0, 2.0, 3.0},
                 {1.0, 2.0, 3.0}, {1.0, 2.0, 3.0}, {1.0, 2.0, 3.0}};
 
+        // setting link attributes
         for (Link linkToEast : linksToEast) {
             Link linkToWest = linksToWest.get(linksToEast.indexOf(linkToEast));
 
@@ -174,42 +181,48 @@ public class TransitScheduleModifier {
         // starting to work on transit lines and routes
         TransitLine m2 = transitSchedule.getTransitLines().get(Id.create("M2---17446_900", TransitLine.class));
 
+        // maybe not needed
+        Id<TransitStopFacility> idAlex16toEast = Id.create("070301008816", TransitStopFacility.class);
+        Id<TransitStopFacility> idAlex16toWest = Id.create("070301008816.1", TransitStopFacility.class);
+        Id<TransitStopFacility> idAlex17toEast = Id.create("070301008817", TransitStopFacility.class);
+        Id<TransitStopFacility> idAlex17toWest = Id.create("070301008817.1", TransitStopFacility.class);
 
-        Id<TransitStopFacility> idAlex16 = Id.create("070301008816", TransitStopFacility.class);
-        Id<TransitStopFacility> idAlex16_1 = Id.create("070301008816.1", TransitStopFacility.class);
-        Id<TransitStopFacility> idAlex17 = Id.create("070301008817", TransitStopFacility.class);
-        Id<TransitStopFacility> idAlex17_1 = Id.create("070301008817.1", TransitStopFacility.class);
-
-
-
-
-
-
-
-/*
-
-
-        // HEADING EAST
-        // for bla bla routes (keys):
-        TransitRoute transitRoute = m2.getRoutes().get(Id.create("M2---17446_900_17", TransitRoute.class));
-
-        // inner loop: for stops from the list
-        TransitRouteStop transitRouteStop = tsf.createTransitRouteStop(transitStopFacility, arrOffset, depOffset);
-        transitRoute.getStops().add(index, transitRouteStop);
-
-        // for all following stops: increase offset times
+        // TODO: only toEast and toWest arrays
+        String[] routesAlex16toEast = {"0", "1", "2", "5", "8", "13", "14", "15"};
+        String[] routesAlex16toWest = {"17", "18", "19", "22"};
+        String[] routesAlex17toEast = {"3", "4", "9", "10", "16"};
+        String[] routesAlex17toWest = {"23", "25", "26", "27", "28", "29", "30"};
 
 
 
-        //HEADING WEST
-        TransitRoute transitRoute = m2.getRoutes().get(Id.create("M2---17446_900_17", TransitRoute.class));
+        for (String routeNumber : routesAlex16toWest) {
 
-        TransitRouteStop transitRouteStop = tsf.createTransitRouteStop(transitStopFacility, arrOffset, depOffset);
-        transitRoute.getStops().add(transitRouteStop);
-*/
+            Id<TransitRoute> transitRouteId = Id.create(String.format("M2---17446_900_%s", routeNumber), TransitRoute.class);
+            TransitRoute transitRoute = m2.getRoutes().get(transitRouteId);
+
+            NetworkRoute networkRoute = transitRoute.getRoute();
+            List<Id<Link>> routeLinkIds = networkRoute.getLinkIds();
+            List<Id<Link>> newRouteLinkIds = new ArrayList<>(routeLinkIds);
+            newRouteLinkIds.add(0, networkRoute.getStartLinkId());
+            newRouteLinkIds.add(networkRoute.getEndLinkId());
+            newRouteLinkIds.add(linkIdFromAlex16);
+            newRouteLinkIds.addAll(linkIdsToWest);
+            networkRoute.setLinkIds(networkRoute.getStartLinkId(), newRouteLinkIds, Id.createLinkId("pt_1_toWest"));
+
+            List<TransitRouteStop> routeStopIds = transitRoute.getStops();
+            TransitRouteStop stop = tsf.createTransitRouteStop(transitStopsToWest.get(0), 1.0, 1.0);
+            // TODO: add stops
 
 
+            /*if (transitRouteId.equals(Id.create("M2---17446_900_17", TransitRoute.class))) {
+                System.out.println("route 17:");
+                for (Id<Link> linkId: newRouteLinkIds) {
+                    System.out.println(linkId.toString());
+                }
+            }*/
 
+            // do departures
+        }
 
 
 
