@@ -52,9 +52,9 @@ public class RunOfflineNoiseAnalysis {
 		config.global().setCoordinateSystem("EPSG:31468");
 		config.network().setInputCRS("EPSG:31468");
 //		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
-		config.network().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz");
+		config.network().setInputFile("./scenarios/equil/network-reduced-lanes.xml.gz");
 //		config.plans().setInputFile(runDirectory + runId + ".output_plans.xml.gz");
-		config.plans().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans.xml.gz");
+		config.plans().setInputFile("./scenarios/berlin-v5.5-1pct/50_itrs_after_reduced/berlin-v5.5-1pct.output_plans.xml.gz");
 		config.plans().setInputCRS("EPSG:31468");
 		config.controler().setOutputDirectory(runDirectory);
 		config.controler().setRunId(runId);

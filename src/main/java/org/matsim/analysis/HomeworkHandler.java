@@ -67,4 +67,12 @@ public class HomeworkHandler implements LinkEnterEventHandler {
             throw new RuntimeException(ee);
         }
     }
+
+//    public void departureHandler(PersonDepartureEvent event){
+//        Map<Id<Person>, Double> departureTimeByTripMap = new HashMap<>();
+//        System.out.println("Departure event; time " + event.getTime() + "__linkID:" + event.getLinkId()
+//                + "Which PersonId: " + event.getPersonId());
+//        departureTimeByTripMap.put(event.getPersonId(), event.getTime());
+//
+//    }
 }
