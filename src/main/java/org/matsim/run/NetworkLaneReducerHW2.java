@@ -58,8 +58,6 @@ public class NetworkLaneReducerHW2 {
             }
         }
 
-
-
         System.out.println(counter + " links have been modified");
 
         // writing resulting network to output file

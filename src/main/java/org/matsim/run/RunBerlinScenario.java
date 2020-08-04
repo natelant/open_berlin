@@ -83,14 +83,16 @@ public final class RunBerlinScenario {
 			OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
 
 		// setting number of iterations
-		config.controler().setLastIteration(50);
+		config.controler().setLastIteration(4);
 
 		// setting input network with reduced lanes
-		config.network().setInputFile("../../equil/network-reduced-lanes.xml.gz");
+		config.network().setInputFile("./scenarios/equil/network-modified-HW2.xml.gz");
+		config.transit().setTransitScheduleFile("./scenarios/equil/transit-schedule-modified-HW2.xml.gz");
 
 		// setting new output directory
 		// config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters");
-		config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters-reduced-lanes");
+		config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-5-iters-modified-HW2");
+		// config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters-modified-HW2");
 
 		Scenario scenario = prepareScenario( config ) ;
 
