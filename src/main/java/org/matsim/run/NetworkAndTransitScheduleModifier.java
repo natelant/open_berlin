@@ -89,11 +89,11 @@ public class NetworkAndTransitScheduleModifier {
         ArrayList<Id<Link>> linkIdsToEast = new ArrayList<>();
         ArrayList<Id<Link>> linkIdsToWest = new ArrayList<>();
 
-        // TODO: link attributes (freespeed)
+        // link attributes: length and capacity
         double[][] linksAttributes = {
-                {696.39, 100000.0, 3.0}, {404.35, 100000.0, 3.0}, {389.41, 100000.0, 3.0},
-                {404.3, 100000.0, 3.0}, {404.216, 100000.0, 3.0}, {387.951, 100000.0, 3.0},
-                {413.064, 100000.0, 3.0}, {680.237, 100000.0, 3.0}};
+                {696.39, 100000.0}, {404.35, 100000.0}, {389.41, 100000.0},
+                {404.3, 100000.0}, {404.216, 100000.0}, {387.951, 100000.0},
+                {413.064, 100000.0}, {680.237, 100000.0}};
 
         // create and add pt_Links
         for (int i=0; i<8; i++) {
@@ -144,25 +144,28 @@ public class NetworkAndTransitScheduleModifier {
         alexLinks.add(fromAlex17);
         network.addLink(fromAlex17);
 
+        ArrayList<Double> travelTimesWestToEast = new ArrayList<>(
+                List.of(120.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 120.0));
+
         // setting link attributes
         for (int i=0; i<linkIdsToEast.size(); i++) {
             Link linkToEast = network.getLinks().get(linkIdsToEast.get(i));
-            Link linkToWest = network.getLinks().get(linkIdsToWest.get(i));
-
             linkToEast.setLength(linksAttributes[i][0]);
-            linkToWest.setLength(linksAttributes[i][0]);
             linkToEast.setCapacity(linksAttributes[i][1]);
-            linkToWest.setCapacity(linksAttributes[i][1]);
-            linkToEast.setFreespeed(linksAttributes[i][2]);
-            linkToWest.setFreespeed(linksAttributes[i][2]);
+            linkToEast.setFreespeed( linkToEast.getLength() / (travelTimesWestToEast.get(i) - 30.0));
             linkToEast.setAllowedModes(Set.of("pt"));
+
+            Link linkToWest = network.getLinks().get(linkIdsToWest.get(i));
+            linkToWest.setLength(linksAttributes[i][0]);
+            linkToWest.setCapacity(linksAttributes[i][1]);
+            linkToWest.setFreespeed( linkToWest.getLength() / (travelTimesWestToEast.get(i) - 30.0));
             linkToWest.setAllowedModes(Set.of("pt"));
         }
 
         for (Link link: alexLinks) {
             link.setLength(linksAttributes[7][0]);
             link.setCapacity(linksAttributes[7][1]);
-            link.setFreespeed(linksAttributes[7][2]);
+            link.setFreespeed(link.getLength() / travelTimesWestToEast.get(7) - 30.0);
             link.setAllowedModes(Set.of("pt"));
         }
 
@@ -176,11 +179,10 @@ public class NetworkAndTransitScheduleModifier {
         // .........
 
 
-        // TODO: check and update travel times!
         ArrayList<Double> timeOffsetToEast = new ArrayList<>(
-                List.of(0.0, 60.0, 120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0));
+                List.of(0.0, 120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 600.0));
         ArrayList<Double> timeOffsetToWest = new ArrayList<>(
-                List.of(120.0, 240.0, 360.0, 480.0, 600.0, 720.0, 840.0, 960.0));
+                List.of(120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 600.0));
         Collections.reverse(timeOffsetToEast);
 
         // route numbers, manually collected from transit-schedule.xml
