@@ -34,9 +34,11 @@ public class NetworkAndTransitScheduleModifier {
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
         Network network = scenario.getNetwork();
+        network.getAttributes().removeAttribute("coordinateReferenceSystem");
         NetworkFactory nf = network.getFactory();
 
         TransitSchedule transitSchedule = scenario.getTransitSchedule();
+        transitSchedule.getAttributes().removeAttribute("coordinateReferenceSystem");
         TransitScheduleFactory tsf = transitSchedule.getFactory();
 
         String[] stopNames = {
