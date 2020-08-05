@@ -85,12 +85,11 @@ public final class RunBerlinScenario {
 		// setting number of iterations
 		config.controler().setLastIteration(4);
 
-		// setting input network with reduced lanes
+		// setting modified network and transit schedule input files
 		config.network().setInputFile("../../equil/network-modified-HW2.xml.gz");
 		config.transit().setTransitScheduleFile("../../equil/transit-schedule-modified-HW2.xml.gz");
 
 		// setting new output directory
-		// config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters");
 		config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-5-iters-modified-HW2");
 		// config.controler().setOutputDirectory("./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-50-iters-modified-HW2");
 
@@ -193,7 +192,7 @@ public final class RunBerlinScenario {
 		
 		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
 		
-		ConfigGroup[] customModulesToAdd = null ;
+		ConfigGroup[] customModulesToAdd;
 		if ( additionalInformation== RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig ) {
 			customModulesToAdd = new ConfigGroup[]{ new BerlinExperimentalConfigGroup(true) };
 		} else {
