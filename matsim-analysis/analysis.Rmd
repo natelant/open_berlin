@@ -1,0 +1,212 @@
+---
+title: "Analysis"
+author: "Nate Lant"
+date: "8/6/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(chron)
+library(qwraps2)
+library(kableExtra)
+```
+
+```{r}
+# read in the data
+persons <- read.csv("data/modified_50.output_persons.csv.gz", sep = ";") %>% as_tibble()
+
+# pieces of a trip
+legs <- read.csv("data/modified_50.output_legs.csv.gz", sep = ";") %>% 
+  as_tibble() %>%
+  mutate(new = case_when(
+    str_detect(start_link, "pt_0_") == T ~ T,
+    str_detect(end_link, "pt_1_") == T ~ T,
+    str_detect(start_link, "pt_1_") == T ~ T,
+    str_detect(end_link, "pt_1_") == T ~ T,
+    str_detect(start_link, "pt_2_") == T ~ T,
+    str_detect(end_link, "pt_2_") == T ~ T,
+    str_detect(start_link, "pt_3_") == T ~ T,
+    str_detect(end_link, "pt_3_") == T ~ T,
+    str_detect(start_link, "pt_4_") == T ~ T,
+    str_detect(end_link, "pt_4_") == T ~ T,
+    str_detect(start_link, "pt_5_") == T ~ T,
+    str_detect(end_link, "pt_5_") == T ~ T,
+    str_detect(start_link, "pt_6_") == T ~ T,
+    str_detect(end_link, "pt_6_") == T ~ T,
+    str_detect(start_link, "pt_7_") == T ~ T,
+    str_detect(end_link, "pt_7_") == T ~ T,
+    str_detect(start_link, "pt_8_") == T ~ T,
+    str_detect(end_link, "pt_8_") == T ~ T
+    ),
+         travel = chron(times. = trav_time),
+         version = "modified")
+
+# create list of ID of agents (who take M2)
+m2_legs <- legs %>% filter(new == T)
+
+
+# from origin to destination
+trips <- read.csv("data/modified_50.output_trips.csv.gz", sep = ";") %>% 
+  as_tibble() %>%
+  mutate(travel = chron(times. = trav_time),
+         version = "modified")
+
+# trips of only those who took M2
+m2_trips <- trips %>%
+  filter(person %in% m2_legs$person)
+
+# I dont really know where Mike got these events. Can work on these tomorrow
+events <- read.csv("data/events.csv", sep = ";") %>% 
+  as_tibble() %>%
+  mutate(new = case_when(
+    str_detect(Line1, "M2") == T ~ T,
+    str_detect(Line2, "M2") == T ~ T,
+    str_detect(Line3, "M2") == T ~ T,
+    str_detect(Line4, "M2") == T ~ T,
+    str_detect(Line5, "M2") == T ~ T,
+    str_detect(Line6, "M2") == T ~ T,
+    str_detect(Line7, "M2") == T ~ T,
+    str_detect(Line8, "M2") == T ~ T,
+    ))
+
+
+```
+
+Ok, I want to get persons who use the M2 and see what they did in the base case.
+
+```{r}
+# read in base case
+legs_base <- read.csv("data/base.output_legs.csv.gz", sep = ";") %>% 
+  as_tibble() %>%
+  filter(person %in% m2_legs$person) %>%
+  mutate(travel = chron(times. = trav_time),
+         version = "base")
+
+trips_base <- read.csv("data/base.output_trips.csv.gz", sep = ";")  %>% 
+  as_tibble() %>%
+  filter(person %in% m2_legs$person) %>%
+  mutate(travel = chron(times. = trav_time),
+         version = "base",
+         first_pt_boarding_stop = as.character(first_pt_boarding_stop),
+         last_pt_egress_stop = as.character(last_pt_egress_stop))
+
+# combine both versions
+# contains base and modified for all m2 users
+all_trips <- bind_rows(trips_base, m2_trips) %>%
+  mutate(travel_min = 60*hours(travel)+minutes(travel))
+
+```
+
+
+Then I can see  trip length, trip duration, activity changes, 
+
+
+> How many users switched to use the M2? What modes did they switch from?
+
+There are 132 agents that used the M2 route.
+
+```{r}
+# group by the person id and tally
+unique(m2_legs$person) %>%
+  length()
+
+# modes
+# Create a summary table of base/modified columns and rows of count and percent by mode
+# or i could make a matrix of base/modified
+summary <- list(
+  "Mode" = 
+    list("Bicycle" = ~ qwraps2::n_perc(.data$longest_distance_mode == "bicycle"),
+         "Car" = ~ qwraps2::n_perc(.data$longest_distance_mode == "car"),
+         "Transit" = ~ qwraps2::n_perc(.data$longest_distance_mode == "pt"),
+         "Ride" = ~ qwraps2::n_perc(.data$longest_distance_mode == "ride"),
+         "Walk" = ~ qwraps2::n_perc(.data$longest_distance_mode == "walk")
+         )
+)
+
+all_trips %>% 
+  group_by(version) %>%
+  summary_table(summary)
+```
+
+
+> Where do they live?
+
+> Create a table of volume at each stop by hour
+
+```{r}
+# wait... there are a ton of stops unique(m2_legs$access_stop_id)
+stops <- m2_legs %>%
+  transmute(person, 
+            departure = chron(times. = dep_time), 
+            start_link,
+            arrival = departure + travel,
+            end_link) 
+
+bind_rows(stops %>% transmute(time=departure, stop=start_link),
+          stops %>% transmute(time=arrival, stop=end_link)) %>%
+  mutate(new = ifelse(str_detect(stop, "_to") == T, T, F),
+         hour = hours(time)) %>%
+  filter(new == T) %>%
+  group_by(hour, stop) %>%
+  tally() %>%
+  mutate(n = n*100) %>%
+  spread(stop, n) %>%
+  kable(format = "latex")
+```
+
+
+> How much did travel time (and trip length) improve for the users? Overall?
+
+```{r}
+# travel time base
+all_trips %>% 
+  group_by(version) %>%
+  summarise(average = mean(travel)) %>%
+  kable(format = "latex")
+
+all_trips %>% 
+  group_by(version) %>%
+  summarise(average = round(mean(traveled_distance/1000), 1)) %>%
+  kable(format = "latex")
+
+# I think I should make a histogram
+# distance
+all_trips %>%
+  ggplot(aes(x = traveled_distance/1000)) +
+  geom_histogram(bins = 100) +
+  facet_wrap(~version) + 
+  scale_x_log10() +
+  xlab("Log Scale Trip Distance (km)") +
+  ylab("Count")
+
+# travel time
+all_trips %>%
+  ggplot(aes(x = travel_min)) +
+  geom_histogram(bins = 100) +
+  facet_grid(longest_distance_mode~version)  +
+  xlab("Travel Time (minutes)") +
+  ylab("Frequency (hundreds)")
+```
+
+
+> Did their activities change?
+
+> How long did users wait at each stop?
+
+```{r}
+m2_legs %>% transmute(
+  wait = chron(times. = wait_time),
+  start_link
+) %>%
+  mutate(wait = 60*hours(wait)+minutes(wait),
+         new = ifelse(str_detect(start_link, "_to") == T, T, F)) %>%
+  filter(new ==T) %>%
+  group_by(start_link) %>%
+  summarise(Agents = n()*100,
+            Average = round(mean(wait),1),
+            Max = max(wait)) %>%
+  kable(format = "latex")
+```
+
