@@ -49,8 +49,8 @@ public class RunEventAnalysis {
 	public static void main(String[] args) throws IOException {
 		
 		
-		Map<Id<Person>, List<Event>> personMapBase = handleEvents("/Volumes/smueller_ssd/Replanning0800neu/berlin-drt-v5.5-10pct.output_events.xml");
-		
+		Map<Id<Person>, List<Event>> personMapBase = handleEvents("./scenarios/berlin-v5.5-1pct/HW2-Output-NATE50/HW2-Output/modified_50iters.output_events.xml");
+
 		writeTravelTimesToCSV(personMapBase);
 		
 	}
