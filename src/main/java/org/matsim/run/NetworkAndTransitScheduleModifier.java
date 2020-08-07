@@ -18,7 +18,6 @@ import java.util.*;
 public class NetworkAndTransitScheduleModifier {
 
     static String inputTransitSchedule = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";
-    // static String inputTransitSchedule = "berlin-v5.5-transit-schedule.xml";
     static String inputNetwork = "scenarios/equil/network-reduced-lanes-HW2.xml.gz";
     static String outputNetwork = "./scenarios/equil/network-modified-HW2.xml.gz";
     static String outputTransitSchedule = "./scenarios/equil/transit-schedule-modified-HW2.xml.gz";
@@ -45,18 +44,21 @@ public class NetworkAndTransitScheduleModifier {
 
         // input data for Nodes/TransitStopFacilities/TransitRouteStops
         String[] stopNames = {
-                "S+U_Alexanderplatz/Dircksenstr.", "Berliner_Rathaus", "Fischerinsel",
+                "Memhardstr.", "S+U_Alexanderplatz/Dircksenstr.", "Berliner_Rathaus", "Fischerinsel",
                 "U_Spittelmarkt", "Jerusalemer_Str.", "U_Stadtmitte/Leipziger_Str.",
                 "Leipziger_Str./Wilhelmstr.", "S+U_Potsdamer_Platz", "Kulturforum"};
         double[][] stopCoords = {
-                {4595891.300747029, 5821904.293893884}, {4595741.283812712, 5821391.332894235},
-                {4595543.276787662, 5821032.276349911}, {4595311.298656522, 5820721.322711342},
-                {4594868.306563006, 5820661.307287242}, {4594469.274947998, 5820596.279395453},
-                {4594082.239244875, 5820553.33117294}, {4593681.244368908, 5820501.353559958},
-                {4593018.0, 5820324.0}};
+                {4595951.256039302, 5822171.279169948}, {4595891.300747029, 5821904.293893884},
+                {4595741.283812712, 5821391.332894235}, {4595543.276787662, 5821032.276349911},
+                {4595311.298656522, 5820721.322711342}, {4594868.306563006, 5820661.307287242},
+                {4594469.274947998, 5820596.279395453}, {4594082.239244875, 5820553.33117294},
+                {4593681.244368908, 5820501.353559958}, {4593018.0, 5820324.0}};
 
+        // lists to store Nodes, Links and TSFacilities in both directions
         ArrayList<Node> nodesToEast = new ArrayList<>();
         ArrayList<Node> nodesToWest = new ArrayList<>();
+        ArrayList<Id<Link>> linkIdsToEast = new ArrayList<>();
+        ArrayList<Id<Link>> linkIdsToWest = new ArrayList<>();
         ArrayList<TransitStopFacility> facilitiesToEast = new ArrayList<>();
         ArrayList<TransitStopFacility> facilitiesToWest = new ArrayList<>();
 
@@ -94,10 +96,16 @@ public class NetworkAndTransitScheduleModifier {
         Collections.reverse(nodesToEast);
         Collections.reverse(facilitiesToEast);
 
-        ArrayList<Id<Link>> linkIdsToEast = new ArrayList<>();
-        ArrayList<Id<Link>> linkIdsToWest = new ArrayList<>();
+        // create and add first pt_Link
+        Id<Link> firstLinkId = Id.createLinkId("pt_0_toEast");
+        Link firstLink = nf.createLink(firstLinkId, nodesToEast.get(0), nodesToEast.get(0));
+        firstLink.setLength(50);
+        firstLink.setCapacity(100000.0);
+        firstLink.setFreespeed(0.1);
+        firstLink.setAllowedModes(Set.of("pt"));
+        network.addLink(firstLink);
 
-        // create and add pt_Links
+        // create and add all other pt_Links
         for (int i=0; i<nodesToEast.size(); i++) {
             if (i!=0) {
                 Node toNodeToEast = nodesToEast.get(i);
@@ -110,7 +118,7 @@ public class NetworkAndTransitScheduleModifier {
 
                 Node toNodeToWest = nodesToWest.get(i);
                 Node fromNodeToWest = nodesToWest.get(i-1);
-                Id<Link> linkIdToWest = Id.createLinkId(String.format("pt_%d_toWest", 9-i));
+                Id<Link> linkIdToWest = Id.createLinkId(String.format("pt_%d_toWest", nodesToWest.size()-i));
                 Link linkToWest = nf.createLink(linkIdToWest, fromNodeToWest, toNodeToWest);
                 linkIdsToWest.add(linkIdToWest);
                 facilitiesToWest.get(i).setLinkId(linkIdToWest);
@@ -118,43 +126,41 @@ public class NetworkAndTransitScheduleModifier {
             }
         }
 
-        Id<Link> firstLinkId = Id.createLinkId("pt_0_toEast");
-        Link firstLink = nf.createLink(firstLinkId, nodesToEast.get(0), nodesToEast.get(0));
-        firstLink.setLength(50);
-        firstLink.setCapacity(100000.0);
-        firstLink.setFreespeed(0.1);
-        firstLink.setAllowedModes(Set.of("pt"));
-        network.addLink(firstLink);
-
+        // setting ref link ids for first/last stop
         facilitiesToEast.get(0).setLinkId(firstLinkId);
-        facilitiesToWest.get(0).setLinkId(Id.createLinkId("pt_38663"));
-
+        facilitiesToWest.get(0).setLinkId(Id.createLinkId("pt_38662"));
         Collections.reverse(facilitiesToEast);
 
-        network.getLinks().get(Id.createLinkId("pt_38653")).setFromNode(nodesToEast.get(8));
-        network.removeLink(Id.createLinkId("pt_38638"));
+        // connecting Memhardstr. stop with existing links
+        {
+            network.getLinks().get(Id.createLinkId("pt_38639")).setFromNode(nodesToEast.get(9));
+            network.removeLink(Id.createLinkId("pt_38638"));
+            network.removeLink(Id.createLinkId("pt_38653"));
 
-        network.getLinks().get(Id.createLinkId("pt_38663")).setToNode(nodesToWest.get(0));
-        network.removeLink(Id.createLinkId("pt_38671"));
+            network.getLinks().get(Id.createLinkId("pt_38662")).setToNode(nodesToWest.get(0));
+            network.removeLink(Id.createLinkId("pt_38663"));
+            network.removeLink(Id.createLinkId("pt_38671"));
+        }
 
-        // data for link length and travel time
-        double[] linksLength = {696.39, 404.35, 389.41, 404.3, 404.216, 387.951, 413.064, 680.237, 100000.0};
-
-        ArrayList<Double> travelTimesWestToEast = new ArrayList<>(
-                List.of(120.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 120.0));
+        // data for link length and travel times between stops
+        double[] linksLength = {696.39, 404.35, 389.41, 404.3, 404.216, 387.951, 413.064, 680.237, 273.63};
+        ArrayList<Double> travelTimesToEast = new ArrayList<>(
+                List.of(120.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 120.0, 120.0));
+        ArrayList<Double> travelTimesToWest = new ArrayList<>(travelTimesToEast);
+        Collections.reverse(travelTimesToWest);
 
         // setting link attributes
         for (int i=0; i<linkIdsToEast.size(); i++) {
             Link linkToEast = network.getLinks().get(linkIdsToEast.get(i));
             linkToEast.setLength(linksLength[0]);
             linkToEast.setCapacity(100000.0);
-            linkToEast.setFreespeed( linkToEast.getLength() / (travelTimesWestToEast.get(i) - 30.0));
+            linkToEast.setFreespeed( linkToEast.getLength() / (travelTimesToEast.get(i) - 30.0));
             linkToEast.setAllowedModes(Set.of("pt"));
 
             Link linkToWest = network.getLinks().get(linkIdsToWest.get(i));
             linkToWest.setLength(linksLength[0]);
             linkToWest.setCapacity(100000.0);
-            linkToWest.setFreespeed( linkToWest.getLength() / (travelTimesWestToEast.get(i) - 30.0));
+            linkToWest.setFreespeed( linkToWest.getLength() / (travelTimesToWest.get(i) - 30.0));
             linkToWest.setAllowedModes(Set.of("pt"));
         }
 
@@ -168,10 +174,11 @@ public class NetworkAndTransitScheduleModifier {
         // .........
 
 
+        // data for dep/arr offsets, manually calculated using travel times
         ArrayList<Double> timeOffsetToEast = new ArrayList<>(
-                List.of(0.0, 120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 600.0));
+                List.of(0.0, 120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 600.0, 720.0));
         ArrayList<Double> timeOffsetToWest = new ArrayList<>(
-                List.of(60.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 540.0, 660.0));
+                List.of(120.0, 180.0, 300.0, 360.0, 420.0, 480.0, 540.0, 600.0, 660.0, 780.0));
         Collections.reverse(timeOffsetToEast);
 
         // route numbers, manually collected from transit-schedule.xml
@@ -198,42 +205,47 @@ public class NetworkAndTransitScheduleModifier {
 
         Collections.reverse(stopsToEast);
 
+        // modifying routes heading east
         for (String routeNumber : routesToEast) {
 
+            // getting transit route with particular number
             Id<TransitRoute> transitRouteId = Id.create(String.format("M2---17446_900_%s", routeNumber), TransitRoute.class);
             TransitRoute transitRoute = m2.getRoutes().get(transitRouteId);
 
+            // adding new links, saving them to network route
             NetworkRoute networkRoute = transitRoute.getRoute();
-            List<Id<Link>> routeLinkIds = new ArrayList<>(networkRoute.getLinkIds());
-            routeLinkIds.remove(0);
-            routeLinkIds.add(0, Id.createLinkId("pt_38653"));
+            {
+                List<Id<Link>> routeLinkIds = new ArrayList<>(networkRoute.getLinkIds());
+                routeLinkIds.remove(0);
 
-            List<Id<Link>> newRouteLinkIds = new ArrayList<>(linkIdsToEast);
-            newRouteLinkIds.addAll(routeLinkIds);
+                List<Id<Link>> newRouteLinkIds = new ArrayList<>(linkIdsToEast);
+                newRouteLinkIds.addAll(routeLinkIds);
 
-            networkRoute.setLinkIds(firstLinkId, newRouteLinkIds, networkRoute.getEndLinkId());
-
-            List<TransitRouteStop> stops = new ArrayList<>(stopsToEast);
-
-            for (TransitRouteStop currStop: transitRoute.getStops()) {
-                double offset = currStop.getDepartureOffset().seconds() + timeOffsetToEast.get(0);
-                TransitStopFacility facility = currStop.getStopFacility();
-                TransitRouteStop stop = tsf.createTransitRouteStop(facility, offset, offset);
-                stop.setAwaitDepartureTime(true);
-                stops.add(stop);
+                networkRoute.setLinkIds(firstLinkId, newRouteLinkIds, networkRoute.getEndLinkId());
             }
-            stops.remove(stopsToEast.size());
-            stops.remove(stopsToEast.size());
 
-            TransitStopFacility facility18_1 = transitSchedule.getFacilities().get(Id.create("070301008818.1", TransitStopFacility.class));
-            TransitRouteStop stop18_1 = tsf.createTransitRouteStop(facility18_1, 720.0, 720.0);
-            stops.add(stopsToEast.size(), stop18_1);
+            // adding new stops, saving them to "stops" list
+            List<TransitRouteStop> stops = new ArrayList<>(stopsToEast);
+            {
+                for (TransitRouteStop currStop : transitRoute.getStops()) {
+                    double offset = currStop.getDepartureOffset().seconds() + timeOffsetToEast.get(1);
+                    TransitStopFacility facility = currStop.getStopFacility();
+                    TransitRouteStop stop = tsf.createTransitRouteStop(facility, offset, offset);
+                    stop.setAwaitDepartureTime(true);
+                    stops.add(stop);
+                }
+                stops.remove(stopsToEast.size());
+                stops.remove(stopsToEast.size());
+            }
 
+            // creating modified TransitRoute
             TransitRoute newTransitRoute = tsf.createTransitRoute(transitRouteId, networkRoute, stops, "tram");
 
+            // shifting departures 10 min earlier, so that existing part of the route keeps its schedule
             for (Id<Departure> departureId: transitRoute.getDepartures().keySet()) {
                 double departureTime = transitRoute.getDepartures().get(departureId).getDepartureTime();
-                double newDepartureTime = departureTime - timeOffsetToEast.get(0);
+                double newDepartureTime = departureTime - timeOffsetToEast.get(1);
+                // make sure no negative time appears in the schedule (applies only to 1 Departure of 1 TransitRoute)
                 if (newDepartureTime > 0.0) {
                     Departure newDeparture = tsf.createDeparture(departureId, newDepartureTime);
                     newDeparture.setVehicleId(transitRoute.getDepartures().get(departureId).getVehicleId());
@@ -241,37 +253,47 @@ public class NetworkAndTransitScheduleModifier {
                 }
             }
 
+            // changing transit route with modified one
             m2.removeRoute(transitRoute);
             m2.addRoute(newTransitRoute);
         }
 
+        // modifying routes heading east
         for (String routeNumber : routesToWest) {
 
+            // getting transit route with particular number
             Id<TransitRoute> transitRouteId = Id.create(String.format("M2---17446_900_%s", routeNumber), TransitRoute.class);
             TransitRoute transitRoute = m2.getRoutes().get(transitRouteId);
 
+            // adding new links, saving them to network route
             NetworkRoute networkRoute = transitRoute.getRoute();
-            List<Id<Link>> newRouteLinkIds = new ArrayList<>(networkRoute.getLinkIds());
-            newRouteLinkIds.add(0, networkRoute.getStartLinkId());
-            newRouteLinkIds.add(Id.createLinkId("pt_38663"));
-            newRouteLinkIds.addAll(linkIdsToWest);
-            newRouteLinkIds.remove(Id.createLinkId("pt_1_toWest"));
-            networkRoute.setLinkIds(networkRoute.getStartLinkId(), newRouteLinkIds, Id.createLinkId("pt_1_toWest"));
-
-            List<TransitRouteStop> stops = new ArrayList<>(transitRoute.getStops());
-            stops.remove(stops.size() - 1);
-            double newOffset = stops.get(stops.size()-1).getDepartureOffset().seconds();
-
-            for (TransitRouteStop stopToWest: stopsToWest) {
-                double offset = stopToWest.getDepartureOffset().seconds() + newOffset;
-                TransitStopFacility facility = stopToWest.getStopFacility();
-                TransitRouteStop stop = tsf.createTransitRouteStop(facility, offset, offset);
-                stop.setAwaitDepartureTime(true);
-                stops.add(stop);
+            {
+                List<Id<Link>> newRouteLinkIds = new ArrayList<>(networkRoute.getLinkIds());
+                newRouteLinkIds.addAll(linkIdsToWest);
+                newRouteLinkIds.remove(Id.createLinkId("pt_1_toWest"));
+                networkRoute.setLinkIds(networkRoute.getStartLinkId(), newRouteLinkIds, Id.createLinkId("pt_1_toWest"));
             }
 
+            // adding new stops, saving them to "stops" list
+            List<TransitRouteStop> stops = new ArrayList<>(transitRoute.getStops());
+            {
+                stops.remove(stops.size() - 1);
+                stops.remove(stops.size() - 1);
+                double newOffset = stops.get(stops.size() - 1).getDepartureOffset().seconds();
+
+                for (TransitRouteStop stopToWest : stopsToWest) {
+                    double offset = stopToWest.getDepartureOffset().seconds() + newOffset;
+                    TransitStopFacility facility = stopToWest.getStopFacility();
+                    TransitRouteStop stop = tsf.createTransitRouteStop(facility, offset, offset);
+                    stop.setAwaitDepartureTime(true);
+                    stops.add(stop);
+                }
+            }
+
+            // creating modified TransitRoute
             TransitRoute newTransitRoute = tsf.createTransitRoute(transitRouteId, networkRoute, stops, "tram");
 
+            // re-creating all Departures
             for (Id<Departure> departureId: transitRoute.getDepartures().keySet()) {
                 double departureTime = transitRoute.getDepartures().get(departureId).getDepartureTime();
                 Departure newDeparture = tsf.createDeparture(departureId, departureTime);
@@ -279,11 +301,12 @@ public class NetworkAndTransitScheduleModifier {
                 newTransitRoute.addDeparture(newDeparture);
             }
 
+            // changing transit route with modified one
             m2.removeRoute(transitRoute);
             m2.addRoute(newTransitRoute);
         }
 
-        // use TransitScheduleValidator
+        // using TransitScheduleValidator
         TransitScheduleValidator.ValidationResult result = TransitScheduleValidator.validateAll(transitSchedule, network);
         for (String error : result.getWarnings()) {
             LOGGER.warn(error);
@@ -295,7 +318,7 @@ public class NetworkAndTransitScheduleModifier {
             LOGGER.warn(issue.getMessage());
         }
 
-        // save to files
+        // save to output files
         NetworkWriter nw = new NetworkWriter(network);
         nw.write(outputNetwork);
 
